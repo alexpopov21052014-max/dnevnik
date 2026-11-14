@@ -16,6 +16,11 @@ on:
         description: "Версия Xcode ('auto' = предустановленная)"
         type: string
         default: "auto"
+      runner:
+        description: "Раннер"
+        type: choice
+        default: macos-15
+        options: [macos-15, macos-latest, macos-15-intel]
 
 permissions:
   contents: read
@@ -23,8 +28,8 @@ permissions:
 jobs:
   build:
     name: Capacitor -> Xcode archive -> .ipa
-    runs-on: macos-15
-    timeout-minutes: 60
+    runs-on: ${{ inputs.runner || 'macos-15' }}
+    timeout-minutes: 90
 
     env:
       APP_ID: ${{ inputs.app_id || 'ru.dnevnik.app' }}
@@ -32,16 +37,20 @@ jobs:
       APP_NAME_LATIN: Dnevnik
       EXPORT_METHOD: ${{ inputs.export_method || 'unsigned' }}
       XCODE_MAJOR: ${{ inputs.xcode_version || 'auto' }}
+      CAP_VERSION: "7"
       WEB_DIR: .
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Проверить, что index.html на месте
+      - name: Проверить index.html
         run: |
           test -f index.html || { echo "::error::index.html не найден в корне репозитория"; exit 1; }
-          echo "размер index.html: $(wc -c < index.html) байт"
+          echo "index.html: $(wc -c < index.html) байт"
+
+      - name: Диагностика окружения
+        run: bash scripts/ci-build-ios.sh env
 
       - name: Выбрать Xcode
         run: |
@@ -52,14 +61,13 @@ jobs:
           xcodebuild -version
           xcode-select -p
 
-      - name: Node.js 20
-        uses: actions/setup-node@v4
+      - name: Node.js 24
+        uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: CocoaPods
-        run: |
-          pod --version || (sudo gem install cocoapods --no-document && pod --version)
+        run: bash scripts/ci-build-ios.sh pod
 
       - name: Импорт сертификата и профиля (для подписанных сборок)
         if: env.EXPORT_METHOD != 'unsigned'
@@ -83,7 +91,8 @@ jobs:
             bash scripts/ci-build-ios.sh export
           fi
 
-      - name: Собрать список артефактов
+      - name: Собрать артефакты
+        if: success()
         run: |
           mkdir -p out
           cp build/ipa/*.ipa out/ 2>/dev/null || true
@@ -93,8 +102,27 @@ jobs:
           ls -lh out
 
       - name: Upload .ipa
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ipa-${{ env.EXPORT_METHOD }}-${{ github.run_number }}
           path: out/
           if-no-files-found: error
+
+      - name: Логи и проект при ошибке
+        if: failure()
+        run: |
+          mkdir -p diag
+          cp -R ios diag/ios 2>/dev/null || true
+          cp capacitor.config.json diag/ 2>/dev/null || true
+          cp package.json diag/ 2>/dev/null || true
+          npx cap doctor > diag/cap-doctor.txt 2>&1 || true
+          ls -R diag | head -100
+
+      - name: Upload диагностики
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diag-${{ github.run_number }}
+          path: diag/
+          if-no-files-found: ignore
