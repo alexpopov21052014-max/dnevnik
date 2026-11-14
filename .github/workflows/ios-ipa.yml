@@ -13,15 +13,9 @@ on:
         type: string
         default: ru.dnevnik.app
       xcode_version:
-        description: "Версия Xcode"
+        description: "Версия Xcode ('auto' = предустановленная)"
         type: string
-        default: "15.4"
-  push:
-    branches: [main, master]
-    paths:
-      - "index.html"
-      - ".github/workflows/ios-ipa.yml"
-      - "scripts/**"
+        default: "auto"
 
 permissions:
   contents: read
@@ -29,7 +23,7 @@ permissions:
 jobs:
   build:
     name: Capacitor -> Xcode archive -> .ipa
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
 
     env:
@@ -37,7 +31,7 @@ jobs:
       APP_NAME: "Дневник"
       APP_NAME_LATIN: Dnevnik
       EXPORT_METHOD: ${{ inputs.export_method || 'unsigned' }}
-      XCODE_MAJOR: ${{ inputs.xcode_version || '15.4' }}
+      XCODE_MAJOR: ${{ inputs.xcode_version || 'auto' }}
       WEB_DIR: .
 
     steps:
@@ -51,7 +45,8 @@ jobs:
 
       - name: Выбрать Xcode
         run: |
-          if [ -d "/Applications/Xcode_$XCODE_MAJOR.app" ]; then
+          ls /Applications | grep -i '^Xcode' || true
+          if [ "$XCODE_MAJOR" != "auto" ] && [ -d "/Applications/Xcode_$XCODE_MAJOR.app" ]; then
             sudo xcode-select -switch "/Applications/Xcode_$XCODE_MAJOR.app"
           fi
           xcodebuild -version
@@ -65,16 +60,6 @@ jobs:
       - name: CocoaPods
         run: |
           pod --version || (sudo gem install cocoapods --no-document && pod --version)
-
-      - name: Кэш CocoaPods и npm
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/CocoaPods
-            ~/.npm
-            ios/App/Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-v1
-          restore-keys: pods-${{ runner.os }}-
 
       - name: Импорт сертификата и профиля (для подписанных сборок)
         if: env.EXPORT_METHOD != 'unsigned'
@@ -113,14 +98,3 @@ jobs:
           name: ipa-${{ env.EXPORT_METHOD }}-${{ github.run_number }}
           path: out/
           if-no-files-found: error
-
-      - name: Xcode-логи при ошибке
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: xcode-logs-${{ github.run_number }}
-          path: |
-            ~/Library/Logs/xcodebuild
-            build/*.log
-          if-no-files-found: ignore
-          # trigger
