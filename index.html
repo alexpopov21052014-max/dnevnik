@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Электронный дневник — оценки за год</title>
+<style>
+:root{
+  --bg:#eef1f8; --card:#ffffff; --ink:#141824; --muted:#6b7280; --line:#e3e8f0;
+  --brand:#4f46e5; --brand2:#8b5cf6; --ok:#16a34a; --err:#e11d48; --warn:#f59e0b;
+  --g5:#16a34a; --g4:#65a30d; --g3:#eab308; --g2:#f97316; --g1:#dc2626;
+  --shadow:0 10px 30px rgba(20,24,36,.08);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.hidden{display:none !important}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.spacer{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+h1,h2,h3{margin:0}
+.accent{color:var(--brand)}
+
+/* ---------- auth ---------- */
+.screen-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(1100px 600px at 10% -10%,#dbe4ff 0%,transparent 60%),
+             radial-gradient(900px 500px at 110% 110%,#f3e8ff 0%,transparent 55%),var(--bg)}
+.auth-card{width:100%;max-width:440px;background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:26px}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+.brand .logo{font-size:34px;line-height:1}
+.brand h1{font-size:20px;letter-spacing:-.2px}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;background:#f1f3f9;border-radius:12px;padding:4px;margin-bottom:16px}
+.tab{flex:1;border:0;background:transparent;padding:9px;border-radius:9px;font-weight:600;color:var(--muted)}
+.tab.active{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(20,24,36,.08)}
+form{display:flex;flex-direction:column;gap:12px}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#3b4252}
+input,select{padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;background:#fbfcff;outline:none;font-weight:500}
+input:focus,select:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 4px rgba(79,70,229,.12)}
+.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:700;background:#eef1f8;transition:.15s}
+.btn:hover{filter:brightness(.97)}
+.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 8px 20px rgba(79,70,229,.28)}
+.btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.seg{display:flex;gap:8px;background:#f1f3f9;padding:4px;border-radius:12px}
+.seg-btn{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font-weight:700;color:var(--muted)}
+.seg-btn.active{background:#fff;color:var(--brand);box-shadow:0 2px 8px rgba(20,24,36,.08)}
+.hint{font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.5}
+.link{background:none;border:0;color:var(--brand);font-weight:700;padding:0;text-decoration:underline;font-size:12.5px}
+.banner{background:#fff7ed;border-bottom:1px solid #fed7aa;color:#9a3412;padding:10px 16px;font-size:13px;text-align:center}
+
+/* ---------- app ---------- */
+.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 18px;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand-sm{font-weight:800;font-size:15px}
+.who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:600}
+.pill{background:#eef1f8;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;color:#475569}
+.pill.role{background:#ede9fe;color:#5b21b6}
+.pill.cls{background:#dcfce7;color:#166534}
+.ghost{border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:8px 12px;font-weight:600;font-size:13px}
+.ghost:hover{border-color:#c7d0e0}
+main{padding:18px}
+.view{max-width:1500px;margin:0 auto}
+.layout{display:grid;grid-template-columns:270px minmax(0,1fr) 290px;gap:16px;align-items:start}
+.layout2{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start;margin-top:16px}
+@media (max-width:1180px){.layout{grid-template-columns:1fr}.layout2{grid-template-columns:1fr}}
+.panel{background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.inline{flex-direction:row;align-items:center;gap:8px;font-size:13px}
+.inline input{min-width:170px}
+.months{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px}
+.month{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.month.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+.cal-head,.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal-head div{text-align:center;font-size:11.5px;font-weight:800;color:var(--muted);padding:2px 0}
+.cal-head div.we{color:#d97706}
+.day{position:relative;min-height:58px;border:1px solid var(--line);background:#fbfcff;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;padding:4px;font-size:13px}
+button.day{cursor:pointer}
+button.day:hover{border-color:var(--brand);background:#fff;transform:translateY(-1px)}
+.day.empty{background:transparent;border-color:transparent}
+.day.we{background:#f1f5f9}
+.day.today{outline:2px solid var(--brand);outline-offset:1px}
+.dnum{position:absolute;top:3px;left:6px;font-size:10.5px;font-weight:700;color:#94a3b8}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;
+  color:#fff;font-weight:800;font-size:15px}
+.badge.sm{width:20px;height:20px;font-size:12px;border-radius:6px}
+.g5{background:var(--g5)}.g4{background:var(--g4)}.g3{background:var(--g3)}.g2{background:var(--g2)}.g1{background:var(--g1)}
+.tx5{color:var(--g5)}.tx4{color:var(--g4)}.tx3{color:#a16207}.tx2{color:var(--g2)}.tx1{color:var(--g1)}
+.students{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
+.student{width:100%;display:flex;align-items:center;gap:9px;border:1.5px solid var(--line);background:#fbfcff;
+  border-radius:12px;padding:8px 10px;text-align:left;font-size:13.5px;font-weight:600}
+.student:hover{border-color:#c7d0e0}
+.student.sel{border-color:var(--brand);background:#eef1ff}
+.avatar{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;flex:0 0 auto}
+.sname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.savg{font-variant-numeric:tabular-nums;font-weight:800;color:var(--muted)}
+.starrow{display:flex;align-items:center;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.starrow:last-child{border-bottom:0}
+.chip{display:block;font-size:10px;line-height:1.35;background:#eef1ff;border-radius:6px;padding:1px 4px;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip b{font-weight:800}
+.picker{position:absolute;z-index:100;background:#fff;border-radius:14px;box-shadow:0 18px 40px rgba(20,24,36,.22);
+  padding:10px;width:250px;border:1px solid var(--line)}
+.picker-date{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center}
+.picker-btns{display:flex;gap:6px}
+.picker-btns button{flex:1;border:0;border-radius:10px;height:40px;font-weight:800;font-size:16px;color:#fff;background:#cbd5e1}
+.picker-btns button.del{background:#f1f5f9;color:#64748b;font-size:12px;font-weight:700}
+.picker-btns button.on{outline:3px solid rgba(20,24,36,.35)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:200;background:#111827;color:#fff;
+  padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 14px 30px rgba(0,0,0,.25);max-width:90vw}
+.toast.error{background:var(--err)}
+.toast.ok{background:var(--ok)}
+.modal{position:fixed;inset:0;z-index:150;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{background:#fff;border-radius:18px;max-width:760px;width:100%;max-height:86vh;overflow:auto;padding:22px}
+.modal-card h2{font-size:17px;text-transform:none;letter-spacing:0;color:var(--ink);margin-bottom:10px}
+pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:12px;overflow:auto;font-size:11.5px;line-height:1.5;max-height:44vh}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat .k{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.stat .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.xpbar{height:12px;border-radius:999px;background:#e5e9f2;overflow:hidden;margin-top:8px}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:999px;transition:width .4s}
+.ach{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.achitem{display:flex;align-items:center;gap:7px;border:1.5px solid var(--line);border-radius:12px;padding:7px 10px;
+  font-size:12.5px;font-weight:700;background:#f8fafc;color:#94a3b8}
+.achitem.on{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+td.num{font-variant-numeric:tabular-nums;font-weight:800}
+.demoonly{background:#eff6ff;border-top:1px solid #bfdbfe;color:#1e40af;padding:8px 16px;font-size:12.5px;text-align:center}
+</style>
+</head>
+</head>
+<body>
+
+<div id="bannerConfig" class="banner hidden"></div>
+<div id="bannerSetup" class="banner hidden">
+  ⚠️ Таблицы в Supabase ещё не созданы. Открой
+  <a id="sqlEditorLink" href="https://supabase.com/dashboard/project/gwrtwcmeagexwwfnlgit/sql/new" target="_blank" rel="noopener">SQL Editor проекта</a>,
+  вставь туда SQL из «⚙️ Настройки» и нажми Run.
+  <button class="link" id="btnQuickSql">Скопировать SQL</button>
+</div>
+<div id="bannerDemo" class="demoonly hidden">🧪 Демо-режим: данные хранятся локально в браузере, Supabase не используется. Для реальных аккаунтов впишите URL и anon key в начале файла.</div>
+
+<!-- ================= AUTH ================= -->
+<div class="screen-auth" id="screenAuth">
+  <div class="auth-card">
+    <div class="brand">
+      <span class="logo">📔</span>
+      <div><h1>Электронный дневник</h1><p>Оценки за весь учебный год · 1–11 классы</p></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="login">Вход</button>
+      <button class="tab" data-tab="reg">Регистрация</button>
+    </div>
+
+    <form id="formLogin">
+      <label>Email<input type="email" id="loginEmail" required placeholder="ivan@mail.ru"></label>
+      <label>Пароль<input type="password" id="loginPass" required placeholder="••••••"></label>
+      <button class="btn primary" type="submit">Войти</button>
+    </form>
+
+    <form id="formReg" class="hidden">
+      <div class="seg" id="roleSeg">
+        <button type="button" class="seg-btn active" data-role="student">🎒 Ученик</button>
+        <button type="button" class="seg-btn" data-role="teacher">👩🏫 Учитель</button>
+      </div>
+      <label>ФИО<input id="regName" required placeholder="Иванов Иван"></label>
+      <label>Email<input type="email" id="regEmail" required placeholder="ivan@mail.ru"></label>
+      <label>Пароль (минимум 6 символов)<input type="password" id="regPass" required minlength="6"></label>
+      <label><span id="classLabelText">Мой класс</span><select id="regClass"></select></label>
+      <label id="subjectWrap" class="hidden">Предмет, который вы ведёте<input id="regSubject" placeholder="Математика"></label>
+      <button class="btn primary" type="submit">Создать аккаунт</button>
+    </form>
+
+    <div class="hint" id="authHint"></div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="screenApp" class="hidden">
+  <header class="topbar">
+    <div class="brand-sm">📔 Дневник</div>
+    <div class="who">
+      <span id="whoName"></span>
+      <span class="pill role" id="whoRole"></span>
+      <span class="pill cls" id="whoClass"></span>
+    </div>
+    <div class="spacer"></div>
+    <button class="ghost" id="btnSql">⚙️ Настройка</button>
+    <button class="ghost" id="btnLogout">Выйти</button>
+  </header>
+
+  <main>
+    <!-- ---------- TEACHER ---------- -->
+    <section id="viewTeacher" class="view hidden">
+      <div class="layout">
+        <aside class="panel">
+          <h2>Ученики <span id="tClassCode" class="accent"></span></h2>
+          <input id="studentSearch" placeholder="Поиск ученика..." style="margin-bottom:10px;width:100%">
+          <ul class="students" id="studentList"></ul>
+        </aside>
+
+        <div class="panel">
+          <div class="row">
+            <label class="inline">Предмет: <input id="subjectInput" placeholder="Например: Математика"></label>
+            <div class="spacer"></div>
+            <span class="muted small" id="tHint">Клик по дню — поставить оценку 1–5</span>
+            <button class="ghost" id="btnRefresh">🔄 Обновить</button>
+          </div>
+          <div class="months" id="tMonths"></div>
+          <div class="cal-head" id="tWeekdays"></div>
+          <div class="calendar" id="tCal"></div>
+        </div>
+
+        <aside class="panel">
+          <h2>Статистика класса</h2>
+          <div id="classStats"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ---------- STUDENT ---------- -->
+    <section id="viewStudent" class="view hidden">
+      <div class="panel">
+        <div class="row" style="margin-bottom:6px">
+          <h2 style="margin:0">Мой прогресс</h2>
+          <div class="spacer"></div>
+          <span class="muted small" id="sYearLabel"></span>
+        </div>
+        <div class="stats-grid" id="studentStats"></div>
+        <div class="xpbar"><i id="xpFill" style="width:0%"></i></div>
+        <div class="muted small" id="xpLabel" style="margin-top:6px"></div>
+        <div class="ach" id="achList"></div>
+      </div>
+
+      <div class="layout2">
+        <div class="panel">
+          <div class="row" style="margin-bottom:10px">
+            <h2 style="margin:0">Оценки по дням</h2>
+            <div class="spacer"></div>
+            <button class="ghost" id="btnRefreshS">🔄 Обновить</button>
+          </div>
+          <div class="months" id="sMonths"></div>
+          <div class="cal-head" id="sWeekdays"></div>
+          <div class="calendar" id="sCal"></div>
+        </div>
+        <aside class="panel">
+          <h2>По предметам</h2>
+          <div id="subjectStats"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="picker" class="picker hidden">
+  <div class="picker-date" id="pickerDate"></div>
+  <div class="picker-btns" id="pickerBtns"></div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <h2>⚙️ Подключение Supabase</h2>
+    <p class="small muted" id="setupStatus"></p>
+    <ol class="small" style="line-height:1.7;padding-left:18px">
+      <li>Приложение уже подключено к проекту <b>gwrtwcmeagexwwfnlgit</b> (URL и anon-ключ стоят в начале файла).</li>
+      <li>Осталось создать таблицы: откройте <a href="https://supabase.com/dashboard/project/gwrtwcmeagexwwfnlgit/sql/new" target="_blank" rel="noopener">SQL Editor</a>, вставьте скрипт ниже и нажмите <b>Run</b>. Он создаст <code>classes</code>, <code>profiles</code>, <code>grades</code>, функцию <code>claim_class</code>, 44 класса и политики доступа.</li>
+      <li>Authentication → Sign In / Providers → Email: у вас подтверждение email уже выключено (<b>Confirm email = off</b>), так что вход происходит сразу после регистрации. Включать не нужно.</li>
+      <li>После Run обновите страницу — баннер про таблицы исчезнет, регистрация заработает.</li>
+    </ol>
+    <button class="ghost" id="btnCopySql">📋 Скопировать SQL</button>
+    <pre id="sqlBox"></pre>
+    <div style="text-align:right;margin-top:12px"><button class="btn primary" id="btnCloseModal">Закрыть</button></div>
+  </div>
+</div>
+
+<script type="module">
+/* =====================================================================
+   1. НАСТРОЙКА — впишите свои данные из Supabase
+   ===================================================================== */
+const SUPABASE_URL = "https://gwrtwcmeagexwwfnlgit.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3cnR3Y21lYWdleHd3Zm5sZ2l0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ2NjUzNzIsImV4cCI6MjExMDI0MTM3Mn0.ug1aRoLsGTechEhC1lqGwYOiwtPxzDzpfG6qjAB7nCM";
+
+const SQL_TEXT = [
+"create table if not exists public.classes (",
+"  code text primary key,",
+"  teacher_id uuid references auth.users(id) on delete set null",
+");",
+"",
+"create table if not exists public.profiles (",
+"  id uuid primary key references auth.users(id) on delete cascade,",
+"  role text not null check (role in ('teacher','student')),",
+"  full_name text,",
+"  class_code text references public.classes(code),",
+"  subject text,",
+"  created_at timestamptz default now()",
+");",
+"",
+"create table if not exists public.grades (",
+"  id uuid primary key default gen_random_uuid(),",
+"  student_id uuid not null references auth.users(id) on delete cascade,",
+"  class_code text not null references public.classes(code),",
+"  subject text not null,",
+"  grade_date date not null,",
+"  value int not null check (value between 1 and 5),",
+"  created_by uuid,",
+"  updated_at timestamptz default now(),",
+"  unique (student_id, subject, grade_date)",
+");",
+"",
+"-- все классы: 1А..11Г (44 класса)",
+"insert into public.classes (code)",
+"select g::text || l from generate_series(1,11) g, unnest(array['А','Б','В','Г']) l",
+"on conflict (code) do nothing;",
+"",
+"-- один учитель на класс (кто первый занял)",
+"create or replace function public.claim_class(p_code text)",
+"returns boolean language plpgsql security definer set search_path = public as $$",
+"begin",
+"  update public.classes set teacher_id = auth.uid()",
+"   where code = p_code and teacher_id is null;",
+"  if found then return true; end if;",
+"  return exists (select 1 from public.classes where code = p_code and teacher_id = auth.uid());",
+"end $$;",
+"grant execute on function public.claim_class(text) to authenticated;",
+"",
+"alter table public.classes  enable row level security;",
+"alter table public.profiles enable row level security;",
+"alter table public.grades   enable row level security;",
+"",
+"drop policy if exists classes_read on public.classes;",
+"create policy classes_read on public.classes for select using (true);",
+"drop policy if exists classes_update on public.classes;",
+"create policy classes_update on public.classes for update",
+"  using (teacher_id is null or teacher_id = auth.uid())",
+"  with check (teacher_id = auth.uid());",
+"",
+"drop policy if exists profiles_insert_self on public.profiles;",
+"create policy profiles_insert_self on public.profiles for insert with check (auth.uid() = id);",
+"create policy profiles_read_self  on public.profiles for select using (auth.uid() = id);",
+"drop policy if exists profiles_read_class on public.profiles;",
+"create policy profiles_read_class on public.profiles for select using (",
+"  exists (select 1 from public.classes c where c.code = profiles.class_code and c.teacher_id = auth.uid())",
+");",
+"drop policy if exists profiles_update_self on public.profiles;",
+"create policy profiles_update_self on public.profiles for update using (auth.uid() = id);",
+"",
+"drop policy if exists grades_read on public.grades;",
+"create policy grades_read on public.grades for select using (",
+"  auth.uid() = student_id",
+"  or exists (select 1 from public.classes c where c.code = grades.class_code and c.teacher_id = auth.uid())",
+");",
+"drop policy if exists grades_write on public.grades;",
+"create policy grades_write on public.grades for all using (",
+"  exists (select 1 from public.classes c where c.code = grades.class_code and c.teacher_id = auth.uid())",
+") with check (",
+"  exists (select 1 from public.classes c where c.code = grades.class_code and c.teacher_id = auth.uid())",
+");"
+].join("\n");
+/* =====================================================================
+   2. КОНСТАНТЫ И ХЕЛПЕРЫ
+   ===================================================================== */
+const LETTERS = ['А','Б','В','Г'];
+const CLASS_LIST = (() => { const a = []; for (let g = 1; g <= 11; g++) for (const l of LETTERS) a.push(g + l); return a; })();
+const MONTH_FULL = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const MONTH_SHORT = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+const MONTH_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const TAB_MONTHS = [8,9,10,11,0,1,2,3,4,5];              // сентябрь .. июнь
+const NOW = new Date();
+const START_YEAR = NOW.getMonth() >= 8 ? NOW.getFullYear() : NOW.getFullYear() - 1;
+const DEFAULT_TAB = Math.max(0, TAB_MONTHS.indexOf(NOW.getMonth()));
+const WD = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const isoDate = (y,m,d) => y + '-' + pad(m+1) + '-' + pad(d);
+const todayIso = isoDate(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+const normSubj = s => String(s||'').trim().toLowerCase();
+const monthInfo = i => { const m = TAB_MONTHS[i]; return { m, y: START_YEAR + (m < 8 ? 1 : 0) }; };
+const monthName = i => { const {m} = monthInfo(i); return MONTH_FULL[m] + ' ' + monthInfo(i).y; };
+const shortMonth = i => MONTH_SHORT[monthInfo(i).m];
+const fmtRu = isoStr => { const [y,m,d] = isoStr.split('-').map(Number); return d + ' ' + MONTH_GEN[m-1]; };
+const yearFrom = () => START_YEAR + '-09-01';
+const yearTo = () => (START_YEAR + 1) + '-06-30';
+const gradeClass = a => a >= 4.5 ? 'g5' : a >= 3.5 ? 'g4' : a >= 2.5 ? 'g3' : a >= 1.5 ? 'g2' : 'g1';
+const avgOf = list => list.length ? list.reduce((s,x) => s + x.value, 0) / list.length : 0;
+
+function toast(msg, kind) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (kind || '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.add('hidden'), 3200);
+}
+function rusError(m) {
+  const map = [
+    [/Invalid login credentials/i, 'Неверный email или пароль'],
+    [/User already registered/i, 'Такой email уже зарегистрирован'],
+    [/Password should be at least/i, 'Пароль слишком короткий (минимум 6 символов)'],
+    [/Email not confirmed/i, 'Email не подтверждён — проверьте почту'],
+    [/Unable to validate email/i, 'Некорректный email'],
+    [/rate limit/i, 'Слишком много попыток, подождите немного'],
+    [/relation .* does not exist|PGRST205|schema cache/i, 'Таблицы не созданы: откройте «⚙️ Настройка» и выполните SQL в Supabase'],
+    [/function .*claim_class.* does not exist/i, 'Нет функции claim_class — запустите SQL из «Настройки»']
+  ];
+  for (const [re, txt] of map) if (re.test(m)) return txt;
+  return m;
+}
+
+/* =====================================================================
+   3. SUPABASE ИЛИ ДЕМО-РЕЖИМ
+   ===================================================================== */
+const CONFIGURED = /^https:\/\/[a-z0-9-]+\.supabase\.co/i.test(SUPABASE_URL)
+  && SUPABASE_ANON_KEY.length > 30 && !SUPABASE_ANON_KEY.includes('ВАШ');
+
+let sb = null, supabaseLoaded = false;
+if (CONFIGURED) {
+  const CDNS = [
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm',
+    'https://esm.sh/@supabase/supabase-js@2',
+    'https://unpkg.com/@supabase/supabase-js@2/dist/module/index.js'
+  ];
+  for (const cdn of CDNS) {
+    try {
+      const mod = await import(cdn);
+      sb = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabaseLoaded = true;
+      break;
+    } catch (e) { console.warn('supabase cdn failed:', cdn, e); }
+  }
+}
+
+const state = {
+  demo: false, profile: null, user: null,
+  students: [], grades: [], selectedStudent: null, subject: '', tab: DEFAULT_TAB
+};
+let backend = 'supabase';
+
+/* ---------- демо-хранилище (localStorage) ---------- */
+const DKEY = 'ed_demo_v1';
+const demoStore = {
+  read() { try { return JSON.parse(localStorage.getItem(DKEY)) || { users: [], classes: {}, grades: [], session: null }; }
+           catch (e) { return { users: [], classes: {}, grades: [], session: null }; } },
+  write(d) { localStorage.setItem(DKEY, JSON.stringify(d)); },
+  uid() { return 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+};
+
+const demoApi = {
+  async signUp({ email, password, role, name, classCode, subject }) {
+    const d = demoStore.read();
+    if (d.users.some(u => u.email.toLowerCase() === email.toLowerCase())) throw new Error('Такой email уже зарегистрирован');
+    if (role === 'teacher' && d.classes[classCode]) {
+      throw new Error('Класс ' + classCode + ' уже есть: с этим классом уже зарегистрирован учитель. Выберите другой класс.');
+    }
+    const u = { id: demoStore.uid(), email, password, role, full_name: name, class_code: classCode, subject: subject || null };
+    d.users.push(u);
+    if (role === 'teacher') d.classes[classCode] = u.id;
+    d.session = u.id;
+    demoStore.write(d);
+    return { profile: u };
+  },
+  async signIn(email, password) {
+    const d = demoStore.read();
+    const u = d.users.find(x => x.email.toLowerCase() === email.toLowerCase());
+    if (!u || u.password !== password) throw new Error('Неверный email или пароль');
+    d.session = u.id; demoStore.write(d);
+    return u;
+  },
+  async signOut() { const d = demoStore.read(); d.session = null; demoStore.write(d); },
+  session() { const d = demoStore.read(); return d.users.find(u => u.id === d.session) || null; },
+  async listStudents(classCode) {
+    return demoStore.read().users.filter(u => u.role === 'student' && u.class_code === classCode)
+      .map(u => ({ id: u.id, full_name: u.full_name })).sort((a,b) => a.full_name.localeCompare(b.full_name));
+  },
+  async listGrades({ classCode, studentId }) {
+    const d = demoStore.read();
+    return d.grades.filter(g => g.grade_date >= yearFrom() && g.grade_date <= yearTo()
+      && (studentId ? g.student_id === studentId : g.class_code === classCode));
+  },
+  async upsertGrade({ studentId, classCode, subject, date, value }) {
+    const d = demoStore.read();
+    const ex = d.grades.find(g => g.student_id === studentId && normSubj(g.subject) === normSubj(subject) && g.grade_date === date);
+    if (ex) { ex.value = value; ex.subject = subject; }
+    else d.grades.push({ id: demoStore.uid(), student_id: studentId, class_code: classCode, subject, grade_date: date, value });
+    demoStore.write(d);
+  },
+  async deleteGrade({ studentId, subject, date }) {
+    const d = demoStore.read();
+    d.grades = d.grades.filter(g => !(g.student_id === studentId && normSubj(g.subject) === normSubj(subject) && g.grade_date === date));
+    demoStore.write(d);
+  }
+};
+
+/* ---------- фасад данных ---------- */
+const db = {
+  async signUp(payload) {
+    if (backend === 'demo') return demoApi.signUp(payload);
+    if (payload.role === 'teacher') {
+      const { data: cls, error: ce } = await sb.from('classes').select('code, teacher_id').eq('code', payload.classCode).maybeSingle();
+      if (ce) throw new Error(rusError(ce.message));
+      if (cls && cls.teacher_id) throw new Error('Класс ' + payload.classCode + ' уже есть: с этим классом уже зарегистрирован учитель. Выберите другой класс.');
+    }
+    const { data, error } = await sb.auth.signUp({
+      email: payload.email, password: payload.password,
+      options: { data: { role: payload.role, full_name: payload.name, class_code: payload.classCode, subject: payload.subject || null } }
+    });
+    if (error) throw new Error(rusError(error.message));
+    if (!data.session) {
+      const { data: s2, error: e2 } = await sb.auth.signInWithPassword({ email: payload.email, password: payload.password });
+      if (e2) return { pendingEmail: true };
+      return { profile: await ensureProfile(s2.user) };
+    }
+    const profile = await ensureProfile(data.session.user);
+    return { profile };
+  },
+  async signIn(email, password) {
+    if (backend === 'demo') { const u = await demoApi.signIn(email, password); state.user = { id: u.id, email: u.email }; state.profile = u; return u; }
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(rusError(error.message));
+    return await ensureProfile(data.user);
+  },
+  async signOut() {
+    if (backend === 'demo') await demoApi.signOut(); else { try { await sb.auth.signOut(); } catch (e) {} }
+    state.profile = null; state.user = null;
+  },
+  async listStudents(classCode) {
+    if (backend === 'demo') return demoApi.listStudents(classCode);
+    const { data, error } = await sb.from('profiles').select('id, full_name')
+      .eq('class_code', classCode).eq('role', 'student').order('full_name');
+    if (error) throw new Error(rusError(error.message));
+    return data || [];
+  },
+  async listGrades({ classCode, studentId }) {
+    if (backend === 'demo') return demoApi.listGrades({ classCode, studentId });
+    let q = sb.from('grades').select('id, student_id, class_code, subject, grade_date, value')
+      .gte('grade_date', yearFrom()).lte('grade_date', yearTo());
+    q = studentId ? q.eq('student_id', studentId) : q.eq('class_code', classCode);
+    const { data, error } = await q;
+    if (error) throw new Error(rusError(error.message));
+    return data || [];
+  },
+  async upsertGrade({ studentId, classCode, subject, date, value }) {
+    if (backend === 'demo') return demoApi.upsertGrade({ studentId, classCode, subject, date, value });
+    const { error } = await sb.from('grades').upsert(
+      { student_id: studentId, class_code: classCode, subject, grade_date: date, value, created_by: state.user.id },
+      { onConflict: 'student_id,subject,grade_date' });
+    if (error) throw new Error(rusError(error.message));
+  },
+  async deleteGrade({ studentId, subject, date }) {
+    if (backend === 'demo') return demoApi.deleteGrade({ studentId, subject, date });
+    const { error } = await sb.from('grades').delete()
+      .eq('student_id', studentId).eq('subject', subject).eq('grade_date', date);
+    if (error) throw new Error(rusError(error.message));
+  }
+};
+
+/* создание профиля после регистрации + захват класса учителем */
+async function ensureProfile(user) {
+  const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  if (error) throw new Error(rusError(error.message));
+  if (data) return data;
+  const md = user.user_metadata || {};
+  if (!md.role || !md.class_code) throw new Error('Профиль не найден. Зарегистрируйтесь заново.');
+  if (md.role === 'teacher') {
+    const { data: ok, error: e2 } = await sb.rpc('claim_class', { p_code: md.class_code });
+    if (e2) throw new Error(rusError(e2.message));
+    if (!ok) throw new Error('Класс ' + md.class_code + ' уже есть — за ним закреплён другой учитель. Выберите другой класс.');
+  }
+  const row = { id: user.id, role: md.role, full_name: md.full_name || '', class_code: md.class_code, subject: md.subject || null };
+  const { error: e3 } = await sb.from('profiles').insert(row);
+  if (e3) throw new Error(rusError(e3.message));
+  return row;
+}
+
+/* =====================================================================
+   4. АВТОРИЗАЦИЯ / ЭКРАНЫ
+   ===================================================================== */
+function showAuth() { $('screenApp').classList.add('hidden'); $('screenAuth').classList.remove('hidden'); window.scrollTo(0,0); }
+
+async function enterApp() {
+  $('screenAuth').classList.add('hidden');
+  $('screenApp').classList.remove('hidden');
+  const p = state.profile;
+  $('whoName').textContent = p.full_name || (state.user && state.user.email) || 'Пользователь';
+  $('whoRole').textContent = p.role === 'teacher' ? '👩🏫 Учитель' : '🎒 Ученик';
+  $('whoClass').textContent = 'Класс ' + p.class_code;
+  state.tab = DEFAULT_TAB;
+  if (p.role === 'teacher') {
+    state.subject = p.subject || '';
+    $('subjectInput').value = state.subject;
+    state.selectedStudent = null;
+    await loadClass();
+    renderTeacher();
+  } else {
+    await loadMine();
+    renderStudent();
+  }
+}
+
+async function loadClass() {
+  const code = state.profile.class_code;
+  state.students = await db.listStudents(code);
+  state.grades = await db.listGrades({ classCode: code });
+  if (!state.selectedStudent && state.students.length) state.selectedStudent = state.students[0].id;
+}
+async function loadMine() {
+  state.grades = await db.listGrades({ studentId: state.profile.id });
+}
+/* =====================================================================
+   5. ЭКРАН УЧИТЕЛЯ
+   ===================================================================== */
+function currentSubject() { return ($('subjectInput').value || '').trim(); }
+
+function renderTeacher() {
+  $('viewTeacher').classList.remove('hidden');
+  $('viewStudent').classList.add('hidden');
+  $('tClassCode').textContent = state.profile.class_code;
+  renderStudentList();
+  renderMonths('tMonths', 'tCal');
+  renderTeacherCal();
+  renderClassStats();
+}
+
+function studentGrades(id) { return state.grades.filter(g => g.student_id === id); }
+
+function renderStudentList() {
+  const el = $('studentList');
+  const q = ($('studentSearch').value || '').toLowerCase().trim();
+  const list = state.students.filter(s => (s.full_name || '').toLowerCase().includes(q));
+  if (!list.length) {
+    el.innerHTML = '<li class="muted small">Учеников нет. Ученики выбирают класс ' + esc(state.profile.class_code) + ' при регистрации.</li>';
+    return;
+  }
+  el.innerHTML = list.map(s => {
+    const g = studentGrades(s.id);
+    const a = g.length ? avgOf(g) : null;
+    const sel = s.id === state.selectedStudent ? ' sel' : '';
+    const initial = (s.full_name || '?').trim().charAt(0).toUpperCase();
+    return '<li><button class="student' + sel + '" data-id="' + s.id + '">' +
+      '<span class="avatar">' + esc(initial) + '</span>' +
+      '<span class="sname">' + esc(s.full_name || 'Без имени') + '</span>' +
+      '<span class="savg tx' + (a ? gradeClass(a).slice(1) : '3') + '">' + (a ? a.toFixed(2) : '—') + '</span>' +
+    '</button></li>';
+  }).join('');
+}
+
+function renderMonths(monthsId, calId) {
+  const box = $(monthsId);
+  box.innerHTML = TAB_MONTHS.map((_, i) =>
+    '<button class="month' + (i === state.tab ? ' active' : '') + '" data-tab="' + i + '">' + shortMonth(i) + '</button>').join('');
+  box.querySelectorAll('.month').forEach(b => b.addEventListener('click', () => {
+    state.tab = Number(b.dataset.tab);
+    renderMonths(monthsId, calId);
+    if (calId === 'tCal') renderTeacherCal(); else renderStudentCal();
+  }));
+}
+
+function weekdayHeads() {
+  return WD.map((w, i) => '<div class="' + (i >= 5 ? 'we' : '') + '">' + w + '</div>').join('');
+}
+
+function renderTeacherCal() {
+  $('tWeekdays').innerHTML = weekdayHeads();
+  const cal = $('tCal');
+  const { m, y } = monthInfo(state.tab);
+  const dim = new Date(y, m + 1, 0).getDate();
+  const first = (new Date(y, m, 1).getDay() + 6) % 7;
+  const subj = currentSubject();
+
+  if (!state.selectedStudent) {
+    cal.innerHTML = '<div class="muted small" style="grid-column:1/-1">Выберите ученика слева.</div>';
+    return;
+  }
+  const map = {};
+  for (const g of state.grades) {
+    if (g.student_id === state.selectedStudent && normSubj(g.subject) === normSubj(subj)) map[g.grade_date] = g.value;
+  }
+  let html = '';
+  for (let i = 0; i < first; i++) html += '<div class="day empty"></div>';
+  for (let d = 1; d <= dim; d++) {
+    const date = isoDate(y, m, d);
+    const wd = (new Date(y, m, d).getDay() + 6) % 7;
+    const v = map[date];
+    const cls = ['day', wd >= 5 ? 'we' : '', date === todayIso ? 'today' : ''].filter(Boolean).join(' ');
+    html += '<button class="' + cls + '" data-date="' + date + '">' +
+      '<span class="dnum">' + d + '</span>' +
+      (v ? '<span class="badge g' + v + '">' + v + '</span>' : '') +
+    '</button>';
+  }
+  cal.innerHTML = html;
+  cal.querySelectorAll('button.day').forEach(b => b.addEventListener('click', ev => openPicker(ev, b.dataset.date)));
+}
+
+function renderClassStats() {
+  const el = $('classStats');
+  const g = state.grades;
+  if (!g.length) { el.innerHTML = '<p class="muted small">Оценок пока нет. Выберите ученика, укажите предмет — и ставьте оценки по дням.</p>'; return; }
+  const avg = avgOf(g);
+  const counts = [5,4,3,2,1].map(v => '<span class="badge sm g' + v + '">' + v + '</span> ' + g.filter(x => x.value === v).length).join('&nbsp;&nbsp;');
+  const per = state.students.map(s => { const sg = studentGrades(s.id); return { s, n: sg.length, a: avgOf(sg) }; })
+    .filter(x => x.n > 0).sort((a, b) => b.a - a.a || b.n - a.n);
+  const medals = ['🥇','🥈','🥉'];
+  el.innerHTML =
+    '<div class="stats-grid" style="grid-template-columns:1fr 1fr">' +
+      '<div class="stat"><div class="k">Средний балл</div><div class="v tx' + gradeClass(avg).slice(1) + '">' + avg.toFixed(2) + '</div></div>' +
+      '<div class="stat"><div class="k">Оценок за год</div><div class="v">' + g.length + '</div></div>' +
+    '</div>' +
+    '<div class="small" style="margin-bottom:12px">' + counts + '</div>' +
+    '<div class="small muted" style="font-weight:700;margin-bottom:6px">ЛИДЕРЫ КЛАССА</div>' +
+    per.slice(0, 5).map((x, i) =>
+      '<div class="starrow"><span>' + (medals[i] || '•') + '</span><span class="sname">' + esc(x.s.full_name) + '</span>' +
+      '<span class="tx' + gradeClass(x.a).slice(1) + '" style="font-weight:800">' + x.a.toFixed(2) + '</span></div>').join('');
+}
+
+/* =====================================================================
+   6. ЭКРАН УЧЕНИКА
+   ===================================================================== */
+const ACHIEVEMENTS = [
+  { id:'first',   icon:'🌱', name:'Первая оценка', desc:'получить первую оценку',        test:g => g.length >= 1 },
+  { id:'five',    icon:'⭐', name:'Первая пятёрка', desc:'получить «5»',                 test:g => g.some(x => x.value === 5) },
+  { id:'ten',     icon:'📚', name:'Десятка',       desc:'10 оценок',                     test:g => g.length >= 10 },
+  { id:'good',    icon:'👍', name:'Хорошист',      desc:'средний балл ≥ 3.5',            test:g => g.length >= 5 && avgOf(g) >= 3.5 },
+  { id:'excel',   icon:'🏆', name:'Отличник',      desc:'средний балл ≥ 4.5',            test:g => g.length >= 5 && avgOf(g) >= 4.5 },
+  { id:'nofail',  icon:'🛡️', name:'Без двоек',     desc:'нет «2» и «1» при 10+ оценках', test:g => g.length >= 10 && !g.some(x => x.value <= 2) },
+  { id:'month',   icon:'🗓️', name:'Круглый год',   desc:'оценки в 9 разных месяцах',     test:g => new Set(g.map(x => Number(x.grade_date.slice(5,7)))).size >= 9 },
+  { id:'marathon',icon:'🏃', name:'Марафонец',     desc:'оценки в 30 разных днях',       test:g => new Set(g.map(x => x.grade_date)).size >= 30 },
+  { id:'fifty',   icon:'💯', name:'Полтинник',     desc:'50 оценок',                     test:g => g.length >= 50 }
+];
+
+function renderStudent() {
+  $('viewStudent').classList.remove('hidden');
+  $('viewTeacher').classList.add('hidden');
+  $('sYearLabel').textContent = 'Учебный год ' + START_YEAR + '/' + (START_YEAR + 1);
+  renderStudentStats();
+  renderMonths('sMonths', 'sCal');
+  renderStudentCal();
+  renderSubjectStats();
+}
+
+function renderStudentStats() {
+  const g = state.grades;
+  const xp = g.reduce((s, x) => s + x.value * 10, 0);
+  const level = Math.min(30, Math.floor(xp / 150) + 1);
+  const nextAt = level * 150;
+  const prevAt = (level - 1) * 150;
+  const pct = level >= 30 ? 100 : Math.round((xp - prevAt) / (nextAt - prevAt) * 100);
+  const avg = avgOf(g);
+  $('studentStats').innerHTML =
+    '<div class="stat"><div class="k">Уровень</div><div class="v accent">' + level + '</div></div>' +
+    '<div class="stat"><div class="k">Средний балл</div><div class="v tx' + gradeClass(avg).slice(1) + '">' + (g.length ? avg.toFixed(2) : '—') + '</div></div>' +
+    '<div class="stat"><div class="k">Оценок</div><div class="v">' + g.length + '</div></div>' +
+    '<div class="stat"><div class="k">Пятёрок</div><div class="v tx5">' + g.filter(x => x.value === 5).length + '</div></div>';
+  $('xpFill').style.width = pct + '%';
+  $('xpLabel').textContent = level >= 30
+    ? 'Максимальный уровень! Опыт: ' + xp
+    : 'Опыт: ' + xp + ' / ' + nextAt + ' до уровня ' + (level + 1) + ' (за оценку: балл × 10)';
+  $('achList').innerHTML = ACHIEVEMENTS.map(a => {
+    const on = a.test(g);
+    return '<div class="achitem' + (on ? ' on' : '') + '" title="' + esc(a.desc) + '">' + a.icon + ' ' + a.name + '</div>';
+  }).join('');
+}
+
+function renderStudentCal() {
+  $('sWeekdays').innerHTML = weekdayHeads();
+  const { m, y } = monthInfo(state.tab);
+  const dim = new Date(y, m + 1, 0).getDate();
+  const first = (new Date(y, m, 1).getDay() + 6) % 7;
+  const byDate = {};
+  for (const g of state.grades) (byDate[g.grade_date] = byDate[g.grade_date] || []).push(g);
+  let html = '';
+  for (let i = 0; i < first; i++) html += '<div class="day empty"></div>';
+  for (let d = 1; d <= dim; d++) {
+    const date = isoDate(y, m, d);
+    const wd = (new Date(y, m, d).getDay() + 6) % 7;
+    const items = (byDate[date] || []).sort((a,b) => a.subject.localeCompare(b.subject));
+    const cls = ['day', wd >= 5 ? 'we' : '', date === todayIso ? 'today' : ''].filter(Boolean).join(' ');
+    html += '<div class="' + cls + '">' +
+      '<span class="dnum">' + d + '</span>' +
+      (items.length ? '<div style="width:100%;padding-top:12px">' + items.map(it =>
+        '<span class="chip">' + esc(it.subject.slice(0, 6)) + ' <b class="tx' + it.value + '">' + it.value + '</b></span>').join('') + '</div>' : '') +
+    '</div>';
+  }
+  $('sCal').innerHTML = html;
+}
+
+function renderSubjectStats() {
+  const el = $('subjectStats');
+  const map = {};
+  for (const g of state.grades) (map[normSubj(g.subject)] = map[normSubj(g.subject)] || { name: g.subject, list: [] }).list.push(g);
+  const rows = Object.values(map).map(x => ({ name: x.name, list: x.list, a: avgOf(x.list) }))
+    .sort((a, b) => b.a - a.a || a.name.localeCompare(b.name));
+  if (!rows.length) { el.innerHTML = '<p class="muted small">Оценок пока нет. Как только учитель их поставит — они появятся здесь.</p>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Предмет</th><th>Оц.</th><th>Сред.</th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td>' + esc(r.name) + '</td><td class="num">' + r.list.length + '</td>' +
+      '<td class="num tx' + gradeClass(r.a).slice(1) + '">' + r.a.toFixed(2) + '</td></tr>').join('') +
+    '</tbody></table>';
+}
+/* =====================================================================
+   7. ВЫБОР ОЦЕНКИ
+   ===================================================================== */
+let pickerCtx = null;
+function openPicker(ev, date) {
+  const subj = currentSubject();
+  if (!subj) { toast('Сначала укажите предмет', 'error'); $('subjectInput').focus(); return; }
+  if (!state.selectedStudent) { toast('Выберите ученика', 'error'); return; }
+  const cur = state.grades.find(g => g.student_id === state.selectedStudent && normSubj(g.subject) === normSubj(subj) && g.grade_date === date);
+  pickerCtx = { date, subject: subj, studentId: state.selectedStudent, current: cur ? cur.value : null };
+  $('pickerDate').textContent = fmtRu(date) + ' · ' + subj;
+  $('pickerBtns').innerHTML = [5,4,3,2,1].map(v =>
+    '<button data-v="' + v + '" class="g' + v + (cur && cur.value === v ? ' on' : '') + '">' + v + '</button>').join('') +
+    '<button data-v="0" class="del">Убрать</button>';
+  const p = $('picker');
+  p.classList.remove('hidden');
+  const r = ev.currentTarget.getBoundingClientRect();
+  const w = 260, h = p.offsetHeight || 110;
+  let left = window.scrollX + r.left + r.width / 2 - w / 2;
+  left = Math.max(8, Math.min(left, window.scrollX + document.documentElement.clientWidth - w - 8));
+  let top = window.scrollY + r.bottom + 6;
+  if (r.bottom + h + 20 > window.innerHeight) top = window.scrollY + r.top - h - 6;
+  p.style.left = left + 'px';
+  p.style.top = top + 'px';
+}
+function closePicker() { $('picker').classList.add('hidden'); pickerCtx = null; }
+
+$('pickerBtns').addEventListener('click', async e => {
+  const b = e.target.closest('button');
+  if (!b || !pickerCtx) return;
+  const v = Number(b.dataset.v);
+  const ctx = pickerCtx;
+  closePicker();
+  try {
+    if (v === 0) { await db.deleteGrade({ studentId: ctx.studentId, subject: ctx.subject, date: ctx.date }); toast('Оценка убрана'); }
+    else {
+      await db.upsertGrade({ studentId: ctx.studentId, classCode: state.profile.class_code, subject: ctx.subject, date: ctx.date, value: v });
+      toast('Оценка ' + v + ' выставлена: ' + fmtRu(ctx.date), 'ok');
+    }
+    await loadClass();
+    renderTeacher();
+  } catch (err) { toast(err.message, 'error'); }
+});
+document.addEventListener('click', e => {
+  const p = $('picker');
+  if (p.classList.contains('hidden')) return;
+  if (p.contains(e.target) || e.target.closest('button.day')) return;
+  closePicker();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePicker(); });
+
+/* =====================================================================
+   8. ФОРМЫ
+   ===================================================================== */
+let regRole = 'student';
+const classOptions = CLASS_LIST.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+$('regClass').innerHTML = classOptions;
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+  const isReg = t.dataset.tab === 'reg';
+  $('formReg').classList.toggle('hidden', !isReg);
+  $('formLogin').classList.toggle('hidden', isReg);
+}));
+$('roleSeg').addEventListener('click', e => {
+  const b = e.target.closest('.seg-btn');
+  if (!b) return;
+  regRole = b.dataset.role;
+  $('roleSeg').querySelectorAll('.seg-btn').forEach(x => x.classList.toggle('active', x === b));
+  $('subjectWrap').classList.toggle('hidden', regRole !== 'teacher');
+  $('classLabelText').textContent = regRole === 'teacher' ? 'Класс, который вы ведёте' : 'Мой класс';
+});
+$('subjectWrap').classList.add('hidden');
+
+function busy(btn, on, text) {
+  btn.disabled = on;
+  if (on) { btn.dataset.old = btn.textContent; btn.textContent = text; }
+  else if (btn.dataset.old) { btn.textContent = btn.dataset.old; }
+}
+
+$('formLogin').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  busy(btn, true, 'Входим...');
+  try {
+    if (backend === 'demo') { await db.signIn($('loginEmail').value.trim(), $('loginPass').value); await enterApp(); }
+    else await sb.auth.signInWithPassword({ email: $('loginEmail').value.trim(), password: $('loginPass').value });
+  } catch (err) { toast(rusError(err.message), 'error'); }
+  busy(btn, false);
+});
+
+$('formReg').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const payload = {
+    role: regRole,
+    name: $('regName').value.trim(),
+    email: $('regEmail').value.trim(),
+    password: $('regPass').value,
+    classCode: $('regClass').value,
+    subject: regRole === 'teacher' ? $('regSubject').value.trim() : null
+  };
+  if (!payload.classCode) { toast('Выберите класс', 'error'); return; }
+  if (payload.role === 'teacher' && !payload.subject) { toast('Укажите предмет, который вы ведёте', 'error'); return; }
+  busy(btn, true, 'Создаём...');
+  try {
+    const res = await db.signUp(payload);
+    if (res.pendingEmail) {
+      $('authHint').innerHTML = '📧 Аккаунт создан. Подтвердите email по ссылке из письма, затем войдите.';
+      toast('Проверьте почту для подтверждения', 'ok');
+    } else {
+      state.profile = res.profile;
+      if (backend !== 'demo') { const s = await sb.auth.getSession(); state.user = s.data.session ? s.data.session.user : null; }
+      toast('Добро пожаловать!', 'ok');
+      await enterApp();
+    }
+  } catch (err) { toast(err.message, 'error'); }
+  busy(btn, false);
+});
+
+$('btnLogout').addEventListener('click', async () => { await db.signOut(); showAuth(); });
+$('btnRefresh').addEventListener('click', async () => {
+  try { await loadClass(); renderTeacher(); toast('Обновлено', 'ok'); } catch (e) { toast(e.message, 'error'); }
+});
+$('btnRefreshS').addEventListener('click', async () => {
+  try { await loadMine(); renderStudent(); toast('Обновлено', 'ok'); } catch (e) { toast(e.message, 'error'); }
+});
+$('subjectInput').addEventListener('input', () => { renderTeacherCal(); });
+$('studentList').addEventListener('click', e => {
+  const b = e.target.closest('.student');
+  if (!b) return;
+  state.selectedStudent = b.dataset.id;
+  renderStudentList(); renderTeacherCal();
+});
+$('studentSearch').addEventListener('input', renderStudentList);
+
+/* демо-кнопка в подсказке auth-экрана */
+function renderAuthHint() {
+  if (backend === 'supabase_noschema') {
+    $('authHint').innerHTML = '✅ Supabase подключён (gwrtwcmeagexwwfnlgit), но <b>таблицы ещё не созданы</b>. ' +
+      'Открой <a href="https://supabase.com/dashboard/project/gwrtwcmeagexwwfnlgit/sql/new" target="_blank" rel="noopener">SQL Editor</a>, ' +
+      'вставь SQL из «⚙️ Настройки», нажми <b>Run</b> — и обнови страницу.';
+    return;
+  }
+  const unconfigured = backend === 'demo' || (!CONFIGURED) || !supabaseLoaded;
+  let h = 'Ученик выбирает свой класс (1А … 11Г) и видит свои оценки. Учитель закрепляет класс за собой — ' +
+          'если класс уже занят, регистрация с ним не пройдёт.';
+  if (unconfigured) {
+    h += '<br><br>⚠️ Supabase не подключён. ';
+    h += '<button class="link" id="btnDemoGo">Включить демо-режим</button> (данные в браузере) ' +
+         'или нажмите «⚙️ Настройка» после входа.';
+  } else {
+    h += '<br><br>✅ Supabase подключён. <button class="link" id="btnDemoGo2">Попробовать демо-режим</button>';
+  }
+  $('authHint').innerHTML = h;
+  const go = $('btnDemoGo') || $('btnDemoGo2');
+  if (go) go.addEventListener('click', async () => {
+    backend = 'demo';
+    $('bannerDemo').classList.remove('hidden');
+    toast('Демо-режим включён', 'ok');
+  });
+}
+
+/* =====================================================================
+   9. МОДАЛКА НАСТРОЙКИ
+   ===================================================================== */
+$('sqlBox').textContent = SQL_TEXT;
+$('setupStatus').innerHTML = backend === 'supabase_noschema'
+  ? '⚠️ База подключена, но таблицы не созданы. Скопируй SQL ниже и выполни его в SQL Editor: <a href="https://supabase.com/dashboard/project/gwrtwcmeagexwwfnlgit/sql/new" target="_blank" rel="noopener">открыть SQL Editor</a>.'
+  : backend === 'demo'
+  ? 'Сейчас активен <b>демо-режим</b>. Чтобы включить реальные аккаунты, впишите SUPABASE_URL и SUPABASE_ANON_KEY в начале файла и обновите страницу.'
+  : (supabaseLoaded ? '✅ Supabase подключён: <b>' + esc(SUPABASE_URL) + '</b>' : '⚠️ Supabase не загрузился (проверьте конфиг и интернет).');
+$('btnSql').addEventListener('click', () => $('modal').classList.remove('hidden'));
+$('btnCloseModal').addEventListener('click', () => $('modal').classList.add('hidden'));
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) $('modal').classList.add('hidden'); });
+$('btnQuickSql').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(SQL_TEXT); toast('SQL скопирован — вставь в SQL Editor и нажми Run', 'ok'); }
+  catch (e) { $('modal').classList.remove('hidden'); toast('Скопируй SQL вручную из окна настроек', 'error'); }
+});
+$('btnCopySql').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(SQL_TEXT); toast('SQL скопирован', 'ok'); }
+  catch (e) { toast('Не удалось скопировать — выделите вручную', 'error'); }
+});
+
+/* =====================================================================
+   10. СТАРТ
+   ===================================================================== */
+if (!CONFIGURED || !supabaseLoaded) {
+  backend = 'demo';
+  $('bannerDemo').classList.remove('hidden');
+  if (CONFIGURED && !supabaseLoaded) {
+    $('bannerConfig').classList.remove('hidden');
+    $('bannerConfig').textContent = 'Не удалось загрузить библиотеку Supabase (нет интернета?). Работает демо-режим.';
+  }
+}
+
+async function schemaReady() {
+  const { error } = await sb.from('classes').select('code').limit(1);
+  if (!error) return true;
+  const msg = (error.message || '') + (error.code || '');
+  return !/does not exist|PGRST205|schema cache|relation/i.test(msg);
+}
+function showSetupBanner() {
+  $('bannerSetup').classList.remove('hidden');
+  renderAuthHint();
+}
+window.showSetupBanner = showSetupBanner;
+
+if (backend === 'supabase' || backend === 'supabase_noschema') {
+  try {
+    const ok = await schemaReady();
+    if (!ok) { backend = 'supabase_noschema'; showSetupBanner(); }
+  } catch (e) {}
+  sb.auth.onAuthStateChange((evt, session) => { setTimeout(() => handleSession(session), 0); });
+  const { data } = await sb.auth.getSession();
+  await handleSession(data.session);
+} else {
+  const u = demoApi.session();
+  if (u) { state.profile = u; state.user = { id: u.id, email: u.email }; await enterApp(); }
+  else showAuth();
+}
+
+async function handleSession(session) {
+  try {
+    if (!session) { state.profile = null; state.user = null; showAuth(); renderAuthHint(); return; }
+    state.user = session.user;
+    state.profile = await ensureProfile(session.user);
+    await enterApp();
+  } catch (err) {
+    toast(err.message, 'error');
+    try { await sb.auth.signOut(); } catch (e) {}
+    state.profile = null; state.user = null;
+    showAuth(); renderAuthHint();
+  }
+}
+
+renderAuthHint();
+</script>
+</body>
+</html>
